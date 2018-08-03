@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 
 var game = function(playerName, width, height) {
 
@@ -99,8 +99,6 @@ var game = function(playerName, width, height) {
 
             if (pony == endPoint) {
                 document.removeEventListener('keydown', keyEvent)
-                console.log('Congratulations, you won!')
-                
                 document.getElementById('cheating-container').style.visibility = 'hidden'
                 
                 var animationId = setInterval(fadeOut, 40);
@@ -113,14 +111,12 @@ var game = function(playerName, width, height) {
                         maze.style.opacity -= 0.1
                     } else {
                         clearInterval(animationId)
-                        document.getElementById('game-result').innerText = 'Congratulations, you won!'
+                        document.getElementById('game-result').innerText = 'Hurray, Your pony escaped unharmed!'
                         document.getElementById('game-result').style.visibility = 'visible'
                     }
                 }
             } else if (pony == domokun) {
                 document.removeEventListener('keydown', keyEvent)
-                console.log('Sorry, you lost!')
-                
                 document.getElementById('cheating-container').style.visibility = 'hidden'
                 
                 var animationId = setInterval(fadeOut, 40);
@@ -133,7 +129,7 @@ var game = function(playerName, width, height) {
                         maze.style.opacity -= 0.1
                     } else {
                         clearInterval(animationId)
-                        document.getElementById('game-result').innerText = 'Sorry, you lost!'
+                        document.getElementById('game-result').innerText = 'Your pony got eaten by Dōmo-kun :-('
                         document.getElementById('game-result').style.visibility = 'visible'
                     }
                 }
