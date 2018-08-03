@@ -100,6 +100,9 @@ var game = function(playerName, width, height) {
             if (pony == endPoint) {
                 document.removeEventListener('keydown', keyEvent)
                 console.log('Congratulations, you won!')
+                
+                document.getElementById('cheating-container').style.visibility = 'hidden'
+                
                 var animationId = setInterval(fadeOut, 40);
                 function fadeOut() {
                     var maze = document.getElementById('maze')
@@ -117,6 +120,9 @@ var game = function(playerName, width, height) {
             } else if (pony == domokun) {
                 document.removeEventListener('keydown', keyEvent)
                 console.log('Sorry, you lost!')
+                
+                document.getElementById('cheating-container').style.visibility = 'hidden'
+                
                 var animationId = setInterval(fadeOut, 40);
                 function fadeOut() {
                     var maze = document.getElementById('maze')
