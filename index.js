@@ -12,7 +12,7 @@ var game = function(playerName, width, height) {
         var width = json.size[0]
         var height = json.size[1]
         var index = 0
-        
+
         var table = document.createElement('table')
         table.id = 'maze'
         table.classList.add('game')
@@ -22,33 +22,33 @@ var game = function(playerName, width, height) {
 
         for (var row = 1; row <= height; row++) {
             var tr = table.insertRow(-1)
-            
+
             for (var column = 1; column <= width; column++) {
                 var td = tr.insertCell(-1)
-                
+
                 if (json.data[index].indexOf('west') != -1) {
                     td.classList.add('westWall')
                 }
-                
+
                 if (json.data[index].indexOf('north') != -1) {
                     td.classList.add('northWall')
                 }
-                
+
                 if (index === pony) {
                     td.classList.add('pony')
                 }
-                
+
                 if (index === domokun) {
                     td.classList.add('domokun')
-                } 
-                
+                }
+
                 if (index === endPoint) {
                     td.classList.add('endPoint')
                 }
-                
+
                 index++
             }
-            
+
         }
         return table
     }
@@ -59,20 +59,20 @@ var game = function(playerName, width, height) {
         var width = json.size[0]
         var height = json.size[1]
         var index = 0
-        
+
         for (var row = 1; row <= height; row++) {
             var tr = table.rows[row - 1]
-            
+
             for (var column = 1; column <= width; column++) {
                 var td = tr.cells[column - 1]
-                
+
                 if (index === pony) {
                     td.classList.remove('path')
                     td.classList.add('pony')
                 } else {
                     td.classList.remove('pony')
                 }
-                
+
                 if (index === domokun) {
                     td.classList.remove('pony')
                     td.classList.remove('path')
@@ -80,9 +80,9 @@ var game = function(playerName, width, height) {
                 } else {
                     td.classList.remove('domokun')
                 }
-                
+
                 index++
-            }            
+            }
         }
     }
 
@@ -96,7 +96,7 @@ var game = function(playerName, width, height) {
             var pony = parseInt(json.pony)
             var domokun = parseInt(json.domokun)
             var endPoint = parseInt(json['end-point'])
-            
+
             if (pony == endPoint) {
                 document.removeEventListener('keydown', keyEvent)
                 console.log('Congratulations, you won!')
@@ -104,7 +104,7 @@ var game = function(playerName, width, height) {
                 document.removeEventListener('keydown', keyEvent)
                 console.log('Sorry, you lost!')
             }
-            
+
             let maze = document.getElementById('maze')
             if (maze === null) {
                 document.getElementById('maze-container').appendChild(createMaze(json))
@@ -140,7 +140,7 @@ var game = function(playerName, width, height) {
                 if (!json.data[node.idx].includes('west') && !visisted.includes(node.idx - 1)) {
                     visisted.push(node.idx - 1)
                     queue.push({ 'idx': node.idx - 1, 'parent': node })
-                }            
+                }
                 if (json.data[node.idx + 1] !== undefined && !json.data[node.idx + 1].includes('west') && !visisted.includes(node.idx + 1)) {
                     visisted.push(node.idx + 1)
                     queue.push({ 'idx': node.idx + 1, 'parent': node })
@@ -164,36 +164,36 @@ var game = function(playerName, width, height) {
         while ((node = node.parent) != null)
         {
             if (node.idx != pony && node.idx != end) {
-                path.push(node.idx)                
+                path.push(node.idx)
             }
         }
 
         var width = json.size[0]
         var height = json.size[1]
         var index = 0
-        
+
         for (var row = 1; row <= height; row++) {
             var tr = table.rows[row - 1]
-            
+
             for (var column = 1; column <= width; column++) {
                 var td = tr.cells[column - 1]
-                
+
                 if (path.includes(index) && index != domokun) {
                     td.classList.add('path')
                 }
-                
+
                 index++
-            }            
+            }
         }
     }
 
     function unsolveMaze(table) {
         for (var row = 0; row < table.rows.length; row++) {
-            var tr = table.rows[row]            
+            var tr = table.rows[row]
             for (var column = 0; column < tr.cells.length; column++) {
                 var td = tr.cells[column]
                 td.classList.remove('path')
-            }            
+            }
         }
     }
 
@@ -203,7 +203,7 @@ var game = function(playerName, width, height) {
 
     function keyEvent(event) {
         var direction = ''
-        
+
         if (event.keyCode == 37) { // Left
             direction = 'west'
         } else if (event.keyCode == 38) { // Up
