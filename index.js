@@ -285,7 +285,6 @@ var game = function(playerName, width, height) {
 
 document.addEventListener("DOMContentLoaded", function(event) {
     document.getElementById('enable-cheating').checked = window.sessionStorage.getItem('enable-cheating')
+
+    game('Twilight Sparkle', 15, 15)
 });
-
-game('Twilight Sparkle', 15, 15)
-
