@@ -100,9 +100,37 @@ var game = function(playerName, width, height) {
             if (pony == endPoint) {
                 document.removeEventListener('keydown', keyEvent)
                 console.log('Congratulations, you won!')
+                var animationId = setInterval(fadeOut, 40);
+                function fadeOut() {
+                    var maze = document.getElementById('maze')
+                    if (!maze.style.opacity) {
+                        maze.style.opacity = 1
+                    }
+                    if (maze.style.opacity > 0) {
+                        maze.style.opacity -= 0.1
+                    } else {
+                        clearInterval(animationId)
+                        document.getElementById('game-result').innerText = 'Congratulations, you won!'
+                        document.getElementById('game-result').style.visibility = 'visible'
+                    }
+                }
             } else if (pony == domokun) {
                 document.removeEventListener('keydown', keyEvent)
                 console.log('Sorry, you lost!')
+                var animationId = setInterval(fadeOut, 40);
+                function fadeOut() {
+                    var maze = document.getElementById('maze')
+                    if (!maze.style.opacity) {
+                        maze.style.opacity = 1
+                    }
+                    if (maze.style.opacity > 0) {
+                        maze.style.opacity -= 0.1
+                    } else {
+                        clearInterval(animationId)
+                        document.getElementById('game-result').innerText = 'Sorry, you lost!'
+                        document.getElementById('game-result').style.visibility = 'visible'
+                    }
+                }
             }
 
             let maze = document.getElementById('maze')
@@ -199,6 +227,7 @@ var game = function(playerName, width, height) {
 
     function toggleCheating(event) {
         printMaze(_mazeId)
+        window.sessionStorage.setItem('enable-cheating', true)
     }
 
     function keyEvent(event) {
@@ -254,5 +283,9 @@ var game = function(playerName, width, height) {
         })
 }
 
-game('Twilight Sparkle', 25, 15)
+document.addEventListener("DOMContentLoaded", function(event) {
+    document.getElementById('enable-cheating').checked = window.sessionStorage.getItem('enable-cheating')
+});
+
+game('Twilight Sparkle', 15, 15)
 

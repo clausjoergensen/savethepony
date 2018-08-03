@@ -71,3 +71,14 @@ div#cheating-container
     margin-right: auto;
     margin-top: 20px;
 }
+
+label#game-result
+{
+    position: absolute;
+    margin: 0px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+    visibility: hidden;
+}
