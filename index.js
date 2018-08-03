@@ -111,7 +111,7 @@ var game = function(playerName, width, height) {
                         maze.style.opacity -= 0.1
                     } else {
                         clearInterval(animationId)
-                        document.getElementById('game-result').innerText = 'Hurray, Your pony escaped unharmed!'
+                        document.getElementById('game-result').innerText = 'Hurrah, Your pony escaped unharmed!'
                         document.getElementById('game-result').style.visibility = 'visible'
                     }
                 }
