@@ -58,6 +58,22 @@ class Maze {
     }
   }
 
+  canGoNorth () {
+    return !this.data[this.pony].includes('north')
+  }
+
+  canGoWest () {
+    return !this.data[this.pony].includes('west')
+  }
+
+  canGoSouth () {
+    return !this.data[this.pony + this._width].includes('north')
+  }
+
+  canGoEast () {
+    return !this.data[this.pony + 1].includes('west')
+  }
+
   keydown (event) {
     if (this.completed) {
       return
@@ -65,13 +81,13 @@ class Maze {
 
     let direction = ''
 
-    if (event.keyCode === 37) { // Left
+    if (event.keyCode === 37 && this.canGoWest()) { // Left
       direction = 'west'
-    } else if (event.keyCode === 38) { // Up
+    } else if (event.keyCode === 38 && this.canGoNorth()) { // Up
       direction = 'north'
-    } else if (event.keyCode === 39) { // Right
+    } else if (event.keyCode === 39 && this.canGoEast()) { // Right
       direction = 'east'
-    } else if (event.keyCode === 40) { // Down
+    } else if (event.keyCode === 40 && this.canGoSouth()) { // Down
       direction = 'south'
     } else {
       return
