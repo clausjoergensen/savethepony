@@ -1,10 +1,21 @@
 'use strict'
 
-/* global fetch:false */
-/* global Request:false */
-/* global Headers:false */
-
+/**
+ * A maze using the Trustpilot 'Save the Pony' API from https://ponychallenge.trustpilot.com/
+ *
+ * @class
+ * @public
+ */
 class Maze {
+  /**
+   * Constructs a new maze of a given size for a given Pony.
+   *
+   * @public
+   * @constructor
+   * @param {string} Pony One of the available ponies.
+   * @param {number} width
+   * @param {number} height
+   */
   constructor (pony, width, height) {
     if (width < 15 || width > 25) {
       throw new Error('Invalid argument. Width must be between 15 and 25.')
@@ -42,14 +53,21 @@ class Maze {
       })
   }
 
-  get mazeId () {
-    return this._mazeId
-  }
-
+  /**
+   * Gets whether cheating is enabled.
+   * @return {boolean} True if cheating is enabled; otherwise false.
+   */
   get cheating () {
     return this._cheating
   }
 
+  /**
+   * Sets if cheating should be enabled.
+   * Re-renders the maze if the value have changed
+   *
+   * @public
+   * @param {boolean} value
+   */
   set cheating (value) {
     let shouldRender = value !== this._cheating
     this._cheating = value
@@ -58,22 +76,49 @@ class Maze {
     }
   }
 
+  /**
+   * Returns true if the Pony can move north (up)
+   *
+   * @private
+   */
   canGoNorth () {
     return !this.data[this.pony].includes('north')
   }
 
+  /**
+   * Returns true if the Pony can move west (left)
+   *
+   * @private
+   */
   canGoWest () {
     return !this.data[this.pony].includes('west')
   }
 
+  /**
+   * Returns true if the Pony can move south (down)
+   *
+   * @private
+   */
   canGoSouth () {
     return !this.data[this.pony + this._width].includes('north')
   }
 
+  /**
+   * Returns true if the Pony can move east (right)
+   *
+   * @private
+   */
   canGoEast () {
     return !this.data[this.pony + 1].includes('west')
   }
 
+  /**
+   * Listens for Arrow Keys (Up/Down/Left/Right) and sends a movement action
+   * to the server if the movement is valid (i.e. not into a wall)
+   *
+   * @private
+   * @param {KeyboardEvent} event
+   */
   keydown (event) {
     if (this.completed) {
       return
@@ -93,7 +138,7 @@ class Maze {
       return
     }
 
-    let request = new Request(`https://ponychallenge.trustpilot.com/pony-challenge/maze/${this.mazeId}`, {
+    let request = new Request(`https://ponychallenge.trustpilot.com/pony-challenge/maze/${this._mazeId}`, {
       method: 'POST',
       body: JSON.stringify({
         direction: direction
@@ -110,6 +155,11 @@ class Maze {
       })
   }
 
+  /**
+   * Creates the <table /> element containing the maze, and the maze structure
+   *
+   * @private
+   */
   createMaze () {
     let cellSize = 40
     let index = 0
@@ -157,6 +207,11 @@ class Maze {
     document.addEventListener('keydown', this.keydown.bind(this))
   }
 
+  /**
+   * Updates the position of the Pony and Dōmo-kun in the maze.
+   *
+   * @private
+   */
   updateMaze () {
     let index = 0
 
@@ -186,6 +241,11 @@ class Maze {
     }
   }
 
+  /**
+   * Renders a success or failure message to the user upon completion.
+   *
+   * @private
+   */
   mazeCompleted (succeeded) {
     this.completed = true
     let animationId = 0
@@ -209,12 +269,18 @@ class Maze {
     }, 40)
   }
 
+  /**
+   * Requests the maze data, and renders the maze with the latest position of Dōmo-kun.
+   * Also creates the maze initially if necessary.
+   *
+   * @private
+   */
   renderMaze () {
-    if (!this.mazeId) {
+    if (!this._mazeId) {
       return
     }
 
-    let request = new Request(`https://ponychallenge.trustpilot.com/pony-challenge/maze/${this.mazeId}`, {
+    let request = new Request(`https://ponychallenge.trustpilot.com/pony-challenge/maze/${this._mazeId}`, {
       method: 'GET',
       headers: new Headers({ 'Content-Type': 'application/json' })
     })
@@ -250,7 +316,16 @@ class Maze {
       })
   }
 
+  /**
+   * Solves the maze using a breadth-first search,
+   * annotating the found path with the CSS class 'path'
+   *
+   * @private
+   */
   solveMaze () {
+    /**
+     * Breadth-first search implementation to solve the maze.
+     */
     let solve = (index, end) => {
       let start = { 'idx': index, 'parent': null }
       let queue = []
@@ -261,21 +336,26 @@ class Maze {
 
       while (queue.length !== 0) {
         let node = queue.shift()
+        // If we reach the end, stop the search.
         if (node.idx === this.endPoint) {
           return node
         }
+        // See if we can go west (left)
         if (!this.data[node.idx].includes('west') && !visisted.includes(node.idx - 1)) {
           visisted.push(node.idx - 1)
           queue.push({ 'idx': node.idx - 1, 'parent': node })
         }
+        // See if we can go east (right)
         if (this.data[node.idx + 1] !== undefined && !this.data[node.idx + 1].includes('west') && !visisted.includes(node.idx + 1)) {
           visisted.push(node.idx + 1)
           queue.push({ 'idx': node.idx + 1, 'parent': node })
         }
+        // See if we can move south (down)
         if (this.data[node.idx + this._width] !== undefined && !this.data[node.idx + this._width].includes('north') && !visisted.includes(node.idx + this._width)) {
           visisted.push(node.idx + this._width)
           queue.push({ 'idx': node.idx + this._width, 'parent': node })
         }
+        // See if we can move north (up)
         if (!this.data[node.idx].includes('north') && !visisted.includes(node.idx - this._width)) {
           visisted.push(node.idx - this._width)
           queue.push({ 'idx': node.idx - this._width, 'parent': node })
@@ -285,6 +365,7 @@ class Maze {
       return start
     }
 
+    // Unwind the found path
     let path = []
     let node = solve(this.pony, this.endPoint)
     while ((node = node.parent) != null) {
@@ -293,6 +374,7 @@ class Maze {
       }
     }
 
+    // Render the unwinded path.
     let index = 0
     for (let row = 1; row <= this._height; row++) {
       let tr = this.table.rows[row - 1]
@@ -309,6 +391,11 @@ class Maze {
     }
   }
 
+  /**
+   * 'Unsolves' the maze by removing the CSS 'path' class.
+   *
+   * @private
+   */
   unsolveMaze () {
     for (let row = 0; row < this.table.rows.length; row++) {
       let tr = this.table.rows[row]
@@ -319,6 +406,8 @@ class Maze {
     }
   }
 }
+
+// - Start the Game -
 
 let maze = null // eslint-disable-line no-unused-vars
 

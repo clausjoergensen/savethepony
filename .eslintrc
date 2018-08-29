@@ -23,7 +23,10 @@
   "globals": {
     "document": false,
     "navigator": false,
-    "window": false
+    "window": false,
+    "fetch": false,
+    "Request": false,
+    "Headers": false
   },
 
   "rules": {
