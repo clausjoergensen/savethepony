@@ -1,6 +1,13 @@
 'use strict'
 
 /**
+ * API Base URL.
+ *
+ * @private
+ */
+const BaseURL = 'https://ponychallenge.trustpilot.com/pony-challenge/maze'
+
+/**
  * A maze using the Trustpilot 'Save the Pony' API from https://ponychallenge.trustpilot.com/
  *
  * @class
@@ -29,7 +36,7 @@ class Maze {
     this._height = height
     this._cheating = false
 
-    let request = new Request('https://ponychallenge.trustpilot.com/pony-challenge/maze', {
+    let request = new Request(BaseURL, {
       method: 'POST',
       body: JSON.stringify({
         'maze-width': width,
@@ -139,7 +146,7 @@ class Maze {
       return
     }
 
-    let request = new Request(`https://ponychallenge.trustpilot.com/pony-challenge/maze/${this._mazeId}`, {
+    let request = new Request(`${BaseURL}/${this._mazeId}`, {
       method: 'POST',
       body: JSON.stringify({
         direction: direction
@@ -281,7 +288,7 @@ class Maze {
       return
     }
 
-    let request = new Request(`https://ponychallenge.trustpilot.com/pony-challenge/maze/${this._mazeId}`, {
+    let request = new Request(`${BaseURL}/${this._mazeId}`, {
       method: 'GET',
       headers: new Headers({ 'Content-Type': 'application/json' })
     })
