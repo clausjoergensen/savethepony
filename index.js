@@ -27,7 +27,6 @@ class Maze {
 
     this._width = width
     this._height = height
-    this._mazeId = ''
     this._cheating = false
 
     let request = new Request('https://ponychallenge.trustpilot.com/pony-challenge/maze', {
