@@ -1,292 +1,331 @@
-﻿'use strict'
+'use strict'
 
-var game = function(playerName, width, height) {
+/* global fetch:false */
+/* global Request:false */
+/* global Headers:false */
 
-    var _mazeId = ''
-
-    function createMaze(json) {
-        var cellSize = 40
-        var pony = parseInt(json.pony)
-        var domokun = parseInt(json.domokun)
-        var endPoint = parseInt(json['end-point'])
-        var width = json.size[0]
-        var height = json.size[1]
-        var index = 0
-
-        var table = document.createElement('table')
-        table.id = 'maze'
-        table.classList.add('game')
-        table.cellSpacing = '0'
-        table.style.width = width * cellSize
-        table.style.height = height * cellSize
-
-        for (var row = 1; row <= height; row++) {
-            var tr = table.insertRow(-1)
-
-            for (var column = 1; column <= width; column++) {
-                var td = tr.insertCell(-1)
-
-                if (json.data[index].indexOf('west') != -1) {
-                    td.classList.add('westWall')
-                }
-
-                if (json.data[index].indexOf('north') != -1) {
-                    td.classList.add('northWall')
-                }
-
-                if (index === pony) {
-                    td.classList.add('pony')
-                }
-
-                if (index === domokun) {
-                    td.classList.add('domokun')
-                }
-
-                if (index === endPoint) {
-                    td.classList.add('endPoint')
-                }
-
-                index++
-            }
-
-        }
-        return table
+class Maze {
+  constructor (pony, width, height) {
+    if (width < 15 || width > 25) {
+      throw new Error('Invalid argument. Width must be between 15 and 25.')
     }
 
-    function updateMaze(table, json) {
-        var pony = parseInt(json.pony)
-        var domokun = parseInt(json.domokun)
-        var width = json.size[0]
-        var height = json.size[1]
-        var index = 0
-
-        for (var row = 1; row <= height; row++) {
-            var tr = table.rows[row - 1]
-
-            for (var column = 1; column <= width; column++) {
-                var td = tr.cells[column - 1]
-
-                if (index === pony) {
-                    td.classList.remove('path')
-                    td.classList.add('pony')
-                } else {
-                    td.classList.remove('pony')
-                }
-
-                if (index === domokun) {
-                    td.classList.remove('pony')
-                    td.classList.remove('path')
-                    td.classList.add('domokun')
-                } else {
-                    td.classList.remove('domokun')
-                }
-
-                index++
-            }
-        }
+    if (height < 15 || height > 25) {
+      throw new Error('Invalid argument. Width must be between 15 and 25.')
     }
 
-    function printMaze(mazeId) {
-        fetch(new Request(`https://ponychallenge.trustpilot.com/pony-challenge/maze/${mazeId}`, {
-            method: 'GET',
-            headers: new Headers({ 'Content-Type': 'application/json' })
-        }))
-        .then(response => { return response.json() })
-        .then(json => {
-            var pony = parseInt(json.pony)
-            var domokun = parseInt(json.domokun)
-            var endPoint = parseInt(json['end-point'])
+    this._width = width
+    this._height = height
+    this._mazeId = ''
+    this._cheating = false
 
-            if (pony == endPoint) {
-                document.removeEventListener('keydown', keyEvent)
-                document.getElementById('cheating-container').style.visibility = 'hidden'
-                
-                var animationId = setInterval(fadeOut, 40);
-                function fadeOut() {
-                    var maze = document.getElementById('maze')
-                    if (!maze.style.opacity) {
-                        maze.style.opacity = 1
-                    }
-                    if (maze.style.opacity > 0) {
-                        maze.style.opacity -= 0.1
-                    } else {
-                        clearInterval(animationId)
-                        document.getElementById('game-result').innerText = 'Hurrah, Your pony escaped unharmed!'
-                        document.getElementById('game-result').style.visibility = 'visible'
-                    }
-                }
-            } else if (pony == domokun) {
-                document.removeEventListener('keydown', keyEvent)
-                document.getElementById('cheating-container').style.visibility = 'hidden'
-                
-                var animationId = setInterval(fadeOut, 40);
-                function fadeOut() {
-                    var maze = document.getElementById('maze')
-                    if (!maze.style.opacity) {
-                        maze.style.opacity = 1
-                    }
-                    if (maze.style.opacity > 0) {
-                        maze.style.opacity -= 0.1
-                    } else {
-                        clearInterval(animationId)
-                        document.getElementById('game-result').innerText = 'Your pony got eaten by Dōmo-kun :-('
-                        document.getElementById('game-result').style.visibility = 'visible'
-                    }
-                }
-            }
+    let request = new Request('https://ponychallenge.trustpilot.com/pony-challenge/maze', {
+      method: 'POST',
+      body: JSON.stringify({
+        'maze-width': width,
+        'maze-height': height,
+        'maze-player-name': pony,
+        'difficulty': 0
+      }),
+      headers: new Headers({ 'Content-Type': 'application/json' })
+    })
 
-            let maze = document.getElementById('maze')
-            if (maze === null) {
-                document.getElementById('maze-container').appendChild(createMaze(json))
-            } else {
-                updateMaze(maze, json)
-            }
+    fetch(request)
+      .then(response => { return response.json() })
+      .then(json => { return json.maze_id })
+      .then(mazeId => {
+        this._mazeId = mazeId
+        this.renderMaze()
+      })
+      .catch(error => {
+        console.error(error)
+      })
+  }
 
-            if (document.getElementById('enable-cheating').checked) {
-                solveMaze(json, document.getElementById('maze'))
-            } else {
-                unsolveMaze(document.getElementById('maze'))
-            }
-        })
-        .catch(error => {
-            console.log(error)
-        })
+  get mazeId () {
+    return this._mazeId
+  }
+
+  get cheating () {
+    return this._cheating
+  }
+
+  set cheating (value) {
+    let shouldRender = value !== this._cheating
+    this._cheating = value
+    if (shouldRender) {
+      this.renderMaze()
+    }
+  }
+
+  keydown (event) {
+    if (this.completed) {
+      return
     }
 
-    function solveMaze(json, table) {
+    let direction = ''
 
-        function solve(index, end) {
-            var start = { 'idx': index, 'parent': null }
-            var queue = []
-            queue.push(start)
-            var visisted = []
-            visisted.push(index)
-            var width = parseInt(json.size[0])
-            while (queue.length != 0) {
-                var node = queue.shift()
-                if (node.idx == end) {
-                    return node
-                }
-                if (!json.data[node.idx].includes('west') && !visisted.includes(node.idx - 1)) {
-                    visisted.push(node.idx - 1)
-                    queue.push({ 'idx': node.idx - 1, 'parent': node })
-                }
-                if (json.data[node.idx + 1] !== undefined && !json.data[node.idx + 1].includes('west') && !visisted.includes(node.idx + 1)) {
-                    visisted.push(node.idx + 1)
-                    queue.push({ 'idx': node.idx + 1, 'parent': node })
-                }
-                if (json.data[node.idx + width] !== undefined && !json.data[node.idx + width].includes('north') && !visisted.includes(node.idx + width)) {
-                    visisted.push(node.idx + width)
-                    queue.push({ 'idx': node.idx + width, 'parent': node })
-                }
-                if (!json.data[node.idx].includes('north') && !visisted.includes(node.idx - width)) {
-                    visisted.push(node.idx - width)
-                    queue.push({ 'idx': node.idx - width, 'parent': node })
-                }
-            }
-        }
-
-        var pony = parseInt(json.pony)
-        var domokun = parseInt(json.domokun)
-        var end = parseInt(json['end-point'])
-        var path = []
-        var node = solve(pony, end)
-        while ((node = node.parent) != null)
-        {
-            if (node.idx != pony && node.idx != end) {
-                path.push(node.idx)
-            }
-        }
-
-        var width = json.size[0]
-        var height = json.size[1]
-        var index = 0
-
-        for (var row = 1; row <= height; row++) {
-            var tr = table.rows[row - 1]
-
-            for (var column = 1; column <= width; column++) {
-                var td = tr.cells[column - 1]
-
-                if (path.includes(index) && index != domokun) {
-                    td.classList.add('path')
-                }
-
-                index++
-            }
-        }
+    if (event.keyCode === 37) { // Left
+      direction = 'west'
+    } else if (event.keyCode === 38) { // Up
+      direction = 'north'
+    } else if (event.keyCode === 39) { // Right
+      direction = 'east'
+    } else if (event.keyCode === 40) { // Down
+      direction = 'south'
+    } else {
+      return
     }
 
-    function unsolveMaze(table) {
-        for (var row = 0; row < table.rows.length; row++) {
-            var tr = table.rows[row]
-            for (var column = 0; column < tr.cells.length; column++) {
-                var td = tr.cells[column]
-                td.classList.remove('path')
-            }
+    let request = new Request(`https://ponychallenge.trustpilot.com/pony-challenge/maze/${this.mazeId}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        direction: direction
+      }),
+      headers: new Headers({ 'Content-Type': 'application/json' })
+    })
+
+    fetch(request)
+      .then(response => {
+        this.renderMaze()
+      })
+      .catch(error => {
+        console.error(error)
+      })
+  }
+
+  createMaze () {
+    let cellSize = 40
+    let index = 0
+
+    this.table = document.createElement('table')
+    this.table.classList.add('game')
+    this.table.cellSpacing = '0'
+    this.table.style.width = this._width * cellSize
+    this.table.style.height = this._height * cellSize
+
+    for (let row = 1; row <= this._height; row++) {
+      let tr = this.table.insertRow(-1)
+
+      for (let column = 1; column <= this._width; column++) {
+        let td = tr.insertCell(-1)
+
+        if (this.data[index].indexOf('west') !== -1) {
+          td.classList.add('westWall')
         }
+
+        if (this.data[index].indexOf('north') !== -1) {
+          td.classList.add('northWall')
+        }
+
+        if (index === this.pony) {
+          td.classList.add('pony')
+        }
+
+        if (index === this.domokun) {
+          td.classList.add('domokun')
+        }
+
+        if (index === this.endPoint) {
+          td.classList.add('endPoint')
+        }
+
+        index++
+      }
     }
 
-    function toggleCheating(event) {
-        printMaze(_mazeId)
-        window.sessionStorage.setItem('enable-cheating', true)
-    }
+    let container = document.createElement('div')
+    container.appendChild(this.table)
 
-    function keyEvent(event) {
-        var direction = ''
+    document.body.appendChild(container)
+    document.addEventListener('keydown', this.keydown.bind(this))
+  }
 
-        if (event.keyCode == 37) { // Left
-            direction = 'west'
-        } else if (event.keyCode == 38) { // Up
-            direction = 'north'
-        } else if (event.keyCode == 39) { // Right
-            direction = 'east'
-        } else if (event.keyCode == 40) { // Down
-            direction = 'south'
+  updateMaze () {
+    let index = 0
+
+    for (let row = 1; row <= this._height; row++) {
+      let tr = this.table.rows[row - 1]
+
+      for (let column = 1; column <= this._width; column++) {
+        let td = tr.cells[column - 1]
+
+        if (index === this.pony) {
+          td.classList.remove('path')
+          td.classList.add('pony')
         } else {
-            return
+          td.classList.remove('pony')
         }
 
-        fetch(new Request(`https://ponychallenge.trustpilot.com/pony-challenge/maze/${_mazeId}`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    direction: direction
-                }),
-                headers: new Headers({ 'Content-Type': 'application/json' })
-            }))
-            .then(response => {
-                printMaze(_mazeId)
-            })
-            .catch(error => {
-                console.log(error)
-            })
+        if (index === this.domokun) {
+          td.classList.remove('pony')
+          td.classList.remove('path')
+          td.classList.add('domokun')
+        } else {
+          td.classList.remove('domokun')
+        }
+
+        index++
+      }
+    }
+  }
+
+  mazeCompleted (succeeded) {
+    this.completed = true
+    let animationId = 0
+    animationId = setInterval(() => {
+      if (!this.table.style.opacity) {
+        this.table.style.opacity = 1
+      }
+      if (this.table.style.opacity > 0) {
+        this.table.style.opacity -= 0.1
+      } else {
+        clearInterval(animationId)
+
+        let label = document.createElement('label')
+        label.id = 'game-result'
+        label.innerText = succeeded
+          ? 'Hurrah, Your pony escaped unharmed!'
+          : 'Your pony got eaten by Dōmo-kun :-('
+
+        this.table.parentElement.appendChild(label)
+      }
+    }, 40)
+  }
+
+  renderMaze () {
+    if (!this.mazeId) {
+      return
     }
 
-    fetch(new Request('https://ponychallenge.trustpilot.com/pony-challenge/maze', {
-            method: 'POST',
-            body: JSON.stringify({
-                'maze-width': width,
-                'maze-height': height,
-                'maze-player-name': playerName,
-                'difficulty': 0
-            }),
-            headers: new Headers({ 'Content-Type': 'application/json' })
-        }))
-        .then(response => { return response.json() })
-        .then(json => { return json.maze_id })
-        .then(mazeId => {
-            _mazeId = mazeId
-            printMaze(mazeId)
-            document.addEventListener('keydown', keyEvent)
-            document.getElementById('enable-cheating').addEventListener('click', toggleCheating)
-        })
-        .catch(error => {
-            console.log(error)
-        })
+    let request = new Request(`https://ponychallenge.trustpilot.com/pony-challenge/maze/${this.mazeId}`, {
+      method: 'GET',
+      headers: new Headers({ 'Content-Type': 'application/json' })
+    })
+
+    fetch(request)
+      .then(response => { return response.json() })
+      .then(json => {
+        this.pony = parseInt(json.pony)
+        this.domokun = parseInt(json.domokun)
+        this.endPoint = parseInt(json['end-point'])
+        this.data = json.data
+
+        if (this.pony === this.endPoint) {
+          this.mazeCompleted(true)
+        } else if (this.pony === this.domokun) {
+          this.mazeCompleted(false)
+        }
+
+        if (this.table) {
+          this.updateMaze()
+        } else {
+          this.createMaze()
+        }
+
+        if (this.cheating) {
+          this.solveMaze()
+        } else {
+          this.unsolveMaze()
+        }
+      })
+      .catch(error => {
+        console.error(error)
+      })
+  }
+
+  solveMaze () {
+    let solve = (index, end) => {
+      let start = { 'idx': index, 'parent': null }
+      let queue = []
+      queue.push(start)
+
+      let visisted = []
+      visisted.push(index)
+
+      while (queue.length !== 0) {
+        let node = queue.shift()
+        if (node.idx === this.endPoint) {
+          return node
+        }
+        if (!this.data[node.idx].includes('west') && !visisted.includes(node.idx - 1)) {
+          visisted.push(node.idx - 1)
+          queue.push({ 'idx': node.idx - 1, 'parent': node })
+        }
+        if (this.data[node.idx + 1] !== undefined && !this.data[node.idx + 1].includes('west') && !visisted.includes(node.idx + 1)) {
+          visisted.push(node.idx + 1)
+          queue.push({ 'idx': node.idx + 1, 'parent': node })
+        }
+        if (this.data[node.idx + this._width] !== undefined && !this.data[node.idx + this._width].includes('north') && !visisted.includes(node.idx + this._width)) {
+          visisted.push(node.idx + this._width)
+          queue.push({ 'idx': node.idx + this._width, 'parent': node })
+        }
+        if (!this.data[node.idx].includes('north') && !visisted.includes(node.idx - this._width)) {
+          visisted.push(node.idx - this._width)
+          queue.push({ 'idx': node.idx - this._width, 'parent': node })
+        }
+      }
+
+      return start
+    }
+
+    let path = []
+    let node = solve(this.pony, this.endPoint)
+    while ((node = node.parent) != null) {
+      if (node.idx !== this.pony && node.idx !== this.endPoint) {
+        path.push(node.idx)
+      }
+    }
+
+    let index = 0
+    for (let row = 1; row <= this._height; row++) {
+      let tr = this.table.rows[row - 1]
+
+      for (let column = 1; column <= this._width; column++) {
+        let td = tr.cells[column - 1]
+
+        if (path.includes(index) && index !== this.domokun) {
+          td.classList.add('path')
+        }
+
+        index++
+      }
+    }
+  }
+
+  unsolveMaze () {
+    for (let row = 0; row < this.table.rows.length; row++) {
+      let tr = this.table.rows[row]
+      for (let column = 0; column < tr.cells.length; column++) {
+        let td = tr.cells[column]
+        td.classList.remove('path')
+      }
+    }
+  }
 }
 
-document.addEventListener("DOMContentLoaded", function(event) {
-    document.getElementById('enable-cheating').checked = window.sessionStorage.getItem('enable-cheating')
+let maze = null // eslint-disable-line no-unused-vars
 
-    game('Twilight Sparkle', 15, 15)
-});
+document.addEventListener('DOMContentLoaded', e => {
+  let toggleCheatingCheckbox = document.getElementById('enable-cheating')
+  toggleCheatingCheckbox.checked = window.sessionStorage.getItem('enable-cheating') === 'true'
+  toggleCheatingCheckbox.addEventListener('click', (_) => {
+    window.sessionStorage.setItem('enable-cheating', toggleCheatingCheckbox.checked)
+    maze.cheating = toggleCheatingCheckbox.checked
+  })
+
+  console.log(toggleCheatingCheckbox.checked)
+
+  let Pony = {
+    TwilightSparke: 'Twilight Sparkle',
+    Spike: 'Spike',
+    RainbowDash: 'Rainbow Dash',
+    PinkiePie: 'Pinkie Pie',
+    Applejack: 'Applejack',
+    Rarity: 'Rarity',
+    Fluttershy: 'Fluttershy'
+  }
+
+  maze = new Maze(Pony.TwilightSparke, 15, 15)
+  maze.cheating = toggleCheatingCheckbox.checked
+})
