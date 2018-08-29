@@ -55,6 +55,8 @@ class Maze {
 
   /**
    * Gets whether cheating is enabled.
+   *
+   * @public
    * @return {boolean} True if cheating is enabled; otherwise false.
    */
   get cheating () {
