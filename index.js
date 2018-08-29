@@ -369,8 +369,6 @@ class Maze {
           queue.push({ 'idx': node.idx - this._width, 'parent': node })
         }
       }
-
-      return start
     }
 
     // Unwind the found path
