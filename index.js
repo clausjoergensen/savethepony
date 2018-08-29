@@ -422,7 +422,7 @@ let maze = null // eslint-disable-line no-unused-vars
 document.addEventListener('DOMContentLoaded', e => {
   let toggleCheatingCheckbox = document.getElementById('enable-cheating')
   toggleCheatingCheckbox.checked = window.sessionStorage.getItem('enable-cheating') === 'true'
-  toggleCheatingCheckbox.addEventListener('click', (_) => {
+  toggleCheatingCheckbox.addEventListener('click', e => {
     window.sessionStorage.setItem('enable-cheating', toggleCheatingCheckbox.checked)
     maze.cheating = toggleCheatingCheckbox.checked
   })
