@@ -64,7 +64,7 @@ class Maze {
   }
 
   /**
-   * Sets if cheating should be enabled.
+   * Sets whether cheating is enabled.
    * Re-renders the maze if the value have changed
    *
    * @public
