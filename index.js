@@ -419,8 +419,6 @@ document.addEventListener('DOMContentLoaded', e => {
     maze.cheating = toggleCheatingCheckbox.checked
   })
 
-  console.log(toggleCheatingCheckbox.checked)
-
   let Pony = {
     TwilightSparke: 'Twilight Sparkle',
     Spike: 'Spike',
