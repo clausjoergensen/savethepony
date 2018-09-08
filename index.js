@@ -127,7 +127,7 @@ class Maze {
    * @private
    * @param {KeyboardEvent} event
    */
-  keydown (event) {
+  async keydown (event) {
     if (this.completed) {
       return
     }
@@ -154,13 +154,8 @@ class Maze {
       headers: new Headers({ 'Content-Type': 'application/json' })
     })
 
-    fetch(request)
-      .then(response => {
-        this.renderMaze()
-      })
-      .catch(error => {
-        console.error(error)
-      })
+    await fetch(request)
+    await this.renderMaze()
   }
 
   /**
@@ -283,7 +278,7 @@ class Maze {
    *
    * @private
    */
-  renderMaze () {
+  async renderMaze () {
     if (!this._mazeId) {
       return
     }
@@ -293,35 +288,31 @@ class Maze {
       headers: new Headers({ 'Content-Type': 'application/json' })
     })
 
-    fetch(request)
-      .then(response => { return response.json() })
-      .then(json => {
-        this.pony = parseInt(json.pony)
-        this.domokun = parseInt(json.domokun)
-        this.endPoint = parseInt(json['end-point'])
-        this.data = json.data
+    let response = await fetch(request)
+    let json = await response.json()
 
-        if (this.pony === this.endPoint) {
-          this.mazeCompleted(true)
-        } else if (this.pony === this.domokun) {
-          this.mazeCompleted(false)
-        }
+    this.pony = parseInt(json.pony)
+    this.domokun = parseInt(json.domokun)
+    this.endPoint = parseInt(json['end-point'])
+    this.data = json.data
 
-        if (this.table) {
-          this.updateMaze()
-        } else {
-          this.createMaze()
-        }
+    if (this.pony === this.endPoint) {
+      this.mazeCompleted(true)
+    } else if (this.pony === this.domokun) {
+      this.mazeCompleted(false)
+    }
 
-        if (this.cheating) {
-          this.solveMaze()
-        } else {
-          this.unsolveMaze()
-        }
-      })
-      .catch(error => {
-        console.error(error)
-      })
+    if (this.table) {
+      this.updateMaze()
+    } else {
+      this.createMaze()
+    }
+
+    if (this.cheating) {
+      this.solveMaze()
+    } else {
+      this.unsolveMaze()
+    }
   }
 
   /**
