@@ -415,13 +415,24 @@ class Maze {
 
 // - Start the Game -
 
+// Edge does not support window.sessionStorage for file:// protocol.
+let sessionStorage = {}
+if (window.location.href.startsWith('file://') && window.StyleMedia) {
+  sessionStorage = {
+    getItem: function (id) { },
+    setItem: function (id, value) { }
+  }
+} else {
+  sessionStorage = window.sessionStorage
+}
+
 let maze = null // eslint-disable-line no-unused-vars
 
 document.addEventListener('DOMContentLoaded', e => {
   let toggleCheatingCheckbox = document.getElementById('enable-cheating')
-  toggleCheatingCheckbox.checked = window.sessionStorage.getItem('enable-cheating') === 'true'
+  toggleCheatingCheckbox.checked = sessionStorage.getItem('enable-cheating') === 'true'
   toggleCheatingCheckbox.addEventListener('click', e => {
-    window.sessionStorage.setItem('enable-cheating', toggleCheatingCheckbox.checked)
+    sessionStorage.setItem('enable-cheating', toggleCheatingCheckbox.checked)
     maze.cheating = toggleCheatingCheckbox.checked
   })
 
